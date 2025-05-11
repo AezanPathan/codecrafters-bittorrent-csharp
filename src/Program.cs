@@ -34,7 +34,7 @@ if (command == "decode")
        }
     }
 
-   if(encodedValue[0] == 'i' &&  encodedValue[^1] == 'e')
+  else if(encodedValue[0] == 'i' &&  encodedValue[^1] == 'e')
            encodedValue.Substring(1, encodedValue.Length - 2);
 
     else
