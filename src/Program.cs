@@ -16,6 +16,7 @@ if (command == "decode")
 
     // Uncomment this line to pass the first stage
     var encodedValue = param;
+
     if (Char.IsDigit(encodedValue[0]))
     {
        // Example: "5:hello" -> "hello"
@@ -26,6 +27,10 @@ if (command == "decode")
            var strValue = encodedValue.Substring(colonIndex + 1, strLength);
            Console.WriteLine(JsonSerializer.Serialize(strValue));
        }
+
+        if(encodedValue[0] == 'i' &&  encodedValue[^1] == 'e')
+            encodedValue = encodedValue.Substring(1, encodedValue.Length - 2);
+
        else
        {
            throw new InvalidOperationException("Invalid encoded value: " + encodedValue);
