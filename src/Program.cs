@@ -28,14 +28,15 @@ if (command == "decode")
            Console.WriteLine(JsonSerializer.Serialize(strValue));
        }
 
-        if(encodedValue[0] == 'i' &&  encodedValue[^1] == 'e')
-            Console.WriteLine(encodedValue.Substring(1, encodedValue.Length - 2));
-
        else
        {
            throw new InvalidOperationException("Invalid encoded value: " + encodedValue);
        }
     }
+
+   if(encodedValue[0] == 'i' &&  encodedValue[^1] == 'e')
+           encodedValue.Substring(1, encodedValue.Length - 2);
+
     else
     {
        throw new InvalidOperationException("Unhandled encoded value: " + encodedValue);
