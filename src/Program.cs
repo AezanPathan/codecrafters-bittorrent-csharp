@@ -1,4 +1,5 @@
 using System.Text.Json;
+using CodeCrafters.Bittorrent.src;
 
 // Parse arguments
 var (command, param) = args.Length switch
@@ -17,30 +18,36 @@ if (command == "decode")
     // Uncomment this line to pass the first stage
     var encodedValue = param;
 
-    if (Char.IsDigit(encodedValue[0]))
-    {
-       // Example: "5:hello" -> "hello"
-       var colonIndex = encodedValue.IndexOf(':');
-       if (colonIndex != -1)
-       {
-           var strLength = int.Parse(encodedValue[..colonIndex]);
-           var strValue = encodedValue.Substring(colonIndex + 1, strLength);
-           Console.WriteLine(JsonSerializer.Serialize(strValue));
-       }
+    var decoder = new Decoder();
+    (object result, _) = decoder.DecodeInput(encodedValue);
+    Console.WriteLine(JsonSerializer.Serialize(result));
 
-       else
-       {
-           throw new InvalidOperationException("Invalid encoded value: " + encodedValue);
-       }
-    }
+    // if (Char.IsDigit(encodedValue[0]))
+    // {
+    //     // Example: "5:hello" -> "hello"
+    //     var colonIndex = encodedValue.IndexOf(':');
+    //     if (colonIndex != -1)
+    //     {
+    //         var strLength = int.Parse(encodedValue[..colonIndex]);
+    //         var strValue = encodedValue.Substring(colonIndex + 1, strLength);
+    //         Console.WriteLine(JsonSerializer.Serialize(strValue));
+    //     }
 
-  else if(encodedValue[0] == 'i' )//&&  encodedValue[^1] == 'e'
-    Console.WriteLine(encodedValue.Substring(1, encodedValue.Length - 2));
+    //     else
+    //     {
+    //         throw new InvalidOperationException("Invalid encoded value: " + encodedValue);
+    //     }
+    // }
 
-    else
-    {
-       throw new InvalidOperationException("Unhandled encoded value: " + encodedValue);
-    }
+    // else if (encodedValue[0] == 'i')//&&  encodedValue[^1] == 'e'
+    //     Console.WriteLine(encodedValue.Substring(1, encodedValue.Length - 2));
+    // (object result, _) = decoder.DecodeInput(param);
+    //  Console.WriteLine(JsonSerializer.Serialize(result));
+
+    // else
+    // {
+    //     throw new InvalidOperationException("Unhandled encoded value: " + encodedValue);
+    // }
 }
 else
 {
