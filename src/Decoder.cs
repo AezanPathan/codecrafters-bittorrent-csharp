@@ -11,7 +11,7 @@ public class Decoder
         if (Char.IsDigit(input[0])) //if string 
             return DecodeString(input);
 
-        else if (input[0] == 'i') 
+        else if (input[0] == 'i')
             return DecodeInteger(input);
 
         else if (input[0] == 'l')
@@ -44,14 +44,24 @@ public class Decoder
 
     private (long, int) DecodeInteger(string stringToDecode)
     {
+        int end = stringToDecode.IndexOf('e');
+        if (end < 0)
+            throw new FormatException("Invalid integer, missing 'e' terminator: " + stringToDecode);
+
+        // everything between 'i' (at 0) and 'e' (at end)
+        string numStr = stringToDecode.Substring(1, end - 1);
+
+        // consumed length is up through and including that 'e'
+        return (long.Parse(numStr), end + 1);
+
         // Console.WriteLine(stringToDecode.Substring(1, stringToDecode.Length - 2)
 
         // “i<digits>e”
         // int end = stringToDecode.IndexOf('e');
         // if (end < 0) throw new FormatException("Missing 'e' in integer token");
 
-        string num = stringToDecode.Substring(1, stringToDecode.Length - 2);
-        return (long.Parse(num), stringToDecode.Length + 1);
+        // string num = stringToDecode.Substring(1, stringToDecode.Length - 2);
+        // return (long.Parse(num), stringToDecode.Length + 1);
     }
 
     private (List<object>, int) DecodeList(string s)
