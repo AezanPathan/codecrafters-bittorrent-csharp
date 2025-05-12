@@ -11,10 +11,10 @@ public class Decoder
         if (Char.IsDigit(input[0])) //if string 
             return DecodeString(input);
 
-        else if (input[0] == 'i') //if int
+        else if (input[0] == 'i') 
             return DecodeInteger(input);
 
-        else if (input[0] == 'l') // if list
+        else if (input[0] == 'l')
             return DecodeList(input);
         else
             throw new InvalidOperationException($"Unknown bencode type '{input[0]}'");
