@@ -18,9 +18,9 @@ if (command == "decode")
 
     // Uncomment this line to pass the first stage
     var encodedValue = param;
-    var decoder = new BencodeDecoder();
-    // (object result, _) = decoder.DecodeInput(encodedValue);
-    // Console.WriteLine(JsonSerializer.Serialize(result));
+    var decoder = new Decoder();
+    (object result, _) = decoder.DecodeInput(encodedValue);
+    Console.WriteLine(JsonSerializer.Serialize(result));
 }
 else if (command == "info")
 {
