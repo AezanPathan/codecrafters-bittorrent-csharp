@@ -27,6 +27,7 @@ else if (command == "info")
     var decoder = new Decoder();
     var content = File.ReadAllBytes(param);
     (object result, _) = decoder.DecodeInput(content, 0);
+    Console.WriteLine(JsonSerializer.Serialize(result));
 }
 else
 {
