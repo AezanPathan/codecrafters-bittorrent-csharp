@@ -1,94 +1,85 @@
+using System.Text;
+
 namespace CodeCrafters.Bittorrent.src;
 
 public class Decoder
 {
 
-    public (object Value, int Consumed) DecodeInput(string input)
+    public (object Value, int Consumed) DecodeInput(byte[] input, int offset)
     {
-        if (string.IsNullOrEmpty(input))
-            throw new ArgumentException("Nothing to decode", nameof(input));
-
-        if (Char.IsDigit(input[0]))
-            return DecodeString(input);
-
-        else if (input[0] == 'i')
-            return DecodeInteger(input);
-
-        else if (input[0] == 'l')
-            return DecodeList(input);
-
-        else if (input[0] == 'd')
-            return DecodeDictionary(input);
-
-        else
-            throw new InvalidOperationException($"Unknown bencode type '{input[0]}'");
+        return input[offset] switch
+        {
+            >= (byte)'0' and <= (byte)'9' => DecodeString(input, offset),
+            (byte)'i' => DecodeInteger(input, offset),
+            (byte)'l' => DecodeList(input, offset),
+            (byte)'d' => DecodeDictionary(input, offset),
+            _ => throw new InvalidOperationException($"Unknown bencode type '{(char)input[offset]}' at offset {offset}")
+        };
     }
 
-    private (string, int) DecodeString(string stringToDecode)
+    private (string, int) DecodeString(byte[] data, int offset)
     {
-        var colonIndex = stringToDecode.IndexOf(':');
+        int colonIndex = Array.IndexOf(data, (byte)':', offset);
+
         if (colonIndex != -1)
         {
-            var strLength = int.Parse(stringToDecode[..colonIndex]);
-            var strValue = stringToDecode.Substring(colonIndex + 1, strLength);
-            return (strValue, colonIndex + 1 + strLength);
+            int length = int.Parse(Encoding.ASCII.GetString(data, offset, colonIndex - offset));
+            string value = Encoding.ASCII.GetString(data, colonIndex + 1, length);
+            return (value, colonIndex + 1 + length - offset);
         }
         else
-            throw new InvalidOperationException("Invalid encoded value: " + stringToDecode);
+            throw new FormatException("Invalid string: missing colon" + data);
     }
 
-    private (long, int) DecodeInteger(string stringToDecode)
+    private (long, int) DecodeInteger(byte[] data, int offset)
     {
-        int end = stringToDecode.IndexOf('e');
+        int end = Array.IndexOf(data, (byte)'e', offset);
         if (end < 0)
-            throw new FormatException("Invalid integer, missing 'e' terminator: " + stringToDecode);
+            throw new FormatException("Invalid integer, missing 'e' terminator");
 
-        // everything between 'i' (at 0) and 'e' (at end)
-        string numStr = stringToDecode.Substring(1, end - 1);
+        string numStr = Encoding.ASCII.GetString(data, offset + 1, end - offset - 1);
 
-        // consumed length is up through and including that 'e'
-        return (long.Parse(numStr), end + 1);
+        return (long.Parse(numStr), end - offset + 1); 
     }
 
-    private (Dictionary<string, object>, int) DecodeDictionary(string stringToDecode)
+
+    private (Dictionary<string, object>, int) DecodeDictionary(byte[] data, int offset)
     {
         var dict = new Dictionary<string, object>();
-        var offset = 1; // skip 'd'
+        offset += 1; 
 
-        while (offset < stringToDecode.Length && stringToDecode[offset] != 'e')
+        while (offset < data.Length && data[offset] != (byte)'e')
         {
-            // Decode key (must be string)
-            var (key, keyUsed) = DecodeString(stringToDecode.Substring(offset));
+            var (key, keyUsed) = DecodeString(data, offset);
             offset += keyUsed;
 
-            // Decode value
-            var (value, valueUsed) = DecodeInput(stringToDecode.Substring(offset));
+            var (value, valueUsed) = DecodeInput(data, offset);
             dict.Add(key, value);
             offset += valueUsed;
         }
 
-        if (offset >= stringToDecode.Length || stringToDecode[offset] != 'e')
+        if (offset >= data.Length || data[offset] != (byte)'e')
             throw new FormatException("Unterminated dictionary");
 
         return (dict, offset + 1);
     }
 
-    private (List<object>, int) DecodeList(string s)
+    private (List<object>, int) DecodeList(byte[] data, int offset)
     {
-        // “l <elements> e”
         var list = new List<object>();
-        int offset = 1; // skip ‘l’
+        offset += 1; 
 
-        while (offset < s.Length && s[offset] != 'e')
+        while (offset < data.Length && data[offset] != (byte)'e')
         {
-            var (elem, used) = DecodeInput(s[offset..]);
+            var (elem, used) = DecodeInput(data, offset);
             list.Add(elem);
             offset += used;
         }
 
-        if (offset >= s.Length || s[offset] != 'e')
+        if (offset >= data.Length || data[offset] != (byte)'e')
             throw new FormatException("Unterminated list");
 
         return (list, offset + 1);
     }
+
 }

@@ -9,6 +9,7 @@ var (command, param) = args.Length switch
     _ => (args[0], args[1])
 };
 
+
 // Parse command and act accordingly
 if (command == "decode")
 {
@@ -17,37 +18,15 @@ if (command == "decode")
 
     // Uncomment this line to pass the first stage
     var encodedValue = param;
-
     var decoder = new Decoder();
-    (object result, _) = decoder.DecodeInput(encodedValue);
-    Console.WriteLine(JsonSerializer.Serialize(result));
-
-    // if (Char.IsDigit(encodedValue[0]))
-    // {
-    //     // Example: "5:hello" -> "hello"
-    //     var colonIndex = encodedValue.IndexOf(':');
-    //     if (colonIndex != -1)
-    //     {
-    //         var strLength = int.Parse(encodedValue[..colonIndex]);
-    //         var strValue = encodedValue.Substring(colonIndex + 1, strLength);
-    //         Console.WriteLine(JsonSerializer.Serialize(strValue));
-    //     }
-
-    //     else
-    //     {
-    //         throw new InvalidOperationException("Invalid encoded value: " + encodedValue);
-    //     }
-    // }
-
-    // else if (encodedValue[0] == 'i')//&&  encodedValue[^1] == 'e'
-    //     Console.WriteLine(encodedValue.Substring(1, encodedValue.Length - 2));
-    // (object result, _) = decoder.DecodeInput(param);
-    //  Console.WriteLine(JsonSerializer.Serialize(result));
-
-    // else
-    // {
-    //     throw new InvalidOperationException("Unhandled encoded value: " + encodedValue);
-    // }
+    // (object result, _) = decoder.DecodeInput(encodedValue);
+    // Console.WriteLine(JsonSerializer.Serialize(result));
+}
+else if (command == "info")
+{
+    var decoder = new Decoder();
+    var content = File.ReadAllBytes(param);
+    (object result, _) = decoder.DecodeInput(content, 0);
 }
 else
 {
