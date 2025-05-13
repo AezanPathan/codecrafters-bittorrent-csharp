@@ -27,7 +27,15 @@ else if (command == "info")
     var decoder = new Decoder();
     var content = File.ReadAllBytes(param);
     (object result, _) = decoder.DecodeInput(content, 0);
-    Console.WriteLine(JsonSerializer.Serialize(result));
+
+    var meta = (Dictionary<string, object>)result;
+    var infoDict = (Dictionary<string, object>)meta["info"];
+
+    var tracker = (string)meta["announce"];
+    var length = (long)infoDict["length"];
+
+    Console.WriteLine($"Tracker URL: {tracker}");
+    Console.WriteLine($"Length: {length}");
 }
 else
 {
