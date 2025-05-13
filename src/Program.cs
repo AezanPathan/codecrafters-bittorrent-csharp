@@ -1,3 +1,6 @@
+using System.Runtime.Intrinsics.Arm;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using CodeCrafters.Bittorrent.src;
 
@@ -18,15 +21,15 @@ if (command == "decode")
 
     // Uncomment this line to pass the first stage
     var encodedValue = param;
-    var decoder = new Decoder();
+    var decoder = new CodeCrafters.Bittorrent.src.Decoder();
     (object result, _) = decoder.DecodeInput(encodedValue);
     Console.WriteLine(JsonSerializer.Serialize(result));
 }
 else if (command == "info")
 {
-    var decoder = new BencodeDecoder();
+    var Bencodedecoder = new BencodeDecoder();
     var content = File.ReadAllBytes(param);
-    (object result, _) = decoder.DecodeInput(content, 0);
+    (object result, _) = Bencodedecoder.DecodeInput(content, 0);
 
     var meta = (Dictionary<string, object>)result;
     var infoDict = (Dictionary<string, object>)meta["info"];
@@ -34,8 +37,18 @@ else if (command == "info")
     var tracker = (string)meta["announce"];
     var length = (long)infoDict["length"];
 
-    Console.WriteLine($"Tracker URL: {tracker}");
-    Console.WriteLine($"Length: {length}");
+    // Encode the info dictionary
+    byte[] infoBytes = BencodeEncoder.Encode(infoDict);
+
+    // Compute SHA-1 hash
+    using (SHA1 sha1 = SHA1.Create())
+    {
+        byte[] hashBytes = sha1.ComputeHash(infoBytes);
+        string infoHash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+        Console.WriteLine($"Tracker URL: {tracker}");
+        Console.WriteLine($"Length: {length}");
+        Console.WriteLine($"Info Hash: {infoHash}");
+    }
 }
 else
 {
