@@ -18,13 +18,13 @@ if (command == "decode")
 
     // Uncomment this line to pass the first stage
     var encodedValue = param;
-    var decoder = new Decoder();
+    var decoder = new BencodeDecoder();
     // (object result, _) = decoder.DecodeInput(encodedValue);
     // Console.WriteLine(JsonSerializer.Serialize(result));
 }
 else if (command == "info")
 {
-    var decoder = new Decoder();
+    var decoder = new BencodeDecoder();
     var content = File.ReadAllBytes(param);
     (object result, _) = decoder.DecodeInput(content, 0);
 
