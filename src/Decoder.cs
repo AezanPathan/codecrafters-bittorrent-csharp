@@ -39,35 +39,38 @@ public class Decoder
 
         string numStr = Encoding.ASCII.GetString(data, offset + 1, end - offset - 1);
 
-        return (long.Parse(numStr), end - offset + 1); 
+        return (long.Parse(numStr), end - offset + 1);
     }
 
 
     private (Dictionary<string, object>, int) DecodeDictionary(byte[] data, int offset)
     {
         var dict = new Dictionary<string, object>();
-        offset += 1; 
+
+        int start = offset;
+        offset += 1;              
 
         while (offset < data.Length && data[offset] != (byte)'e')
         {
             var (key, keyUsed) = DecodeString(data, offset);
             offset += keyUsed;
 
-            var (value, valueUsed) = DecodeInput(data, offset);
+            var (value, valUsed) = DecodeInput(data, offset);
             dict.Add(key, value);
-            offset += valueUsed;
+            offset += valUsed;
         }
 
         if (offset >= data.Length || data[offset] != (byte)'e')
             throw new FormatException("Unterminated dictionary");
 
-        return (dict, offset + 1);
+        int consumed = (offset - start + 1);
+        return (dict, consumed);
     }
 
     private (List<object>, int) DecodeList(byte[] data, int offset)
     {
         var list = new List<object>();
-        offset += 1; 
+        offset += 1;
 
         while (offset < data.Length && data[offset] != (byte)'e')
         {
