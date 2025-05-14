@@ -40,6 +40,9 @@ namespace CodeCrafters.Bittorrent.src
                 case List<object> list:
                     EncodeList(list, stream);
                     break;
+                case byte[] bytes:  
+                    EncodeBytes(bytes, stream);
+                    break;
                 default:
                     throw new NotSupportedException($"Unsupported type: {obj.GetType()}");
             }
@@ -67,6 +70,12 @@ namespace CodeCrafters.Bittorrent.src
                 EncodeObject(item, stream);
             }
             stream.WriteByte((byte)'e');
+        }
+        private static void EncodeBytes(byte[] bytes, MemoryStream stream)
+        {
+            byte[] length = Encoding.ASCII.GetBytes($"{bytes.Length}:");
+            stream.Write(length, 0, length.Length);
+            stream.Write(bytes, 0, bytes.Length);
         }
     }
 }

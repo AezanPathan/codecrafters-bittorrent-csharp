@@ -34,7 +34,8 @@ else if (command == "info")
     var meta = (Dictionary<string, object>)result;
     var infoDict = (Dictionary<string, object>)meta["info"];
 
-    var tracker = (string)meta["announce"];
+    var announceBytes = (byte[])meta["announce"];
+    string tracker = Encoding.UTF8.GetString(announceBytes);
     var length = (long)infoDict["length"];
 
     // Encode the info dictionary
