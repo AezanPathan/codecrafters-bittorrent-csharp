@@ -4,12 +4,15 @@ namespace CodeCrafters.Bittorrent.src;
 
 public class BencodeDecoder
 {
+    private bool _decodeStringsAsUtf8 = false;
 
-    public (object Value, int Consumed) DecodeInput(byte[] input, int offset)
+    public (object Value, int Consumed) DecodeInput(byte[] input, int offset, bool decodeStringsAsUtf8 = false)
     {
+        _decodeStringsAsUtf8 = decodeStringsAsUtf8;
+
         return input[offset] switch
         {
-            >= (byte)'0' and <= (byte)'9' => DecodeString(input, offset),
+            >= (byte)'0' and <= (byte)'9' => DecodeStringOrBytes(input, offset),
             (byte)'i' => DecodeInteger(input, offset),
             (byte)'l' => DecodeList(input, offset),
             (byte)'d' => DecodeDictionary(input, offset),
@@ -31,6 +34,26 @@ public class BencodeDecoder
             throw new FormatException("Invalid string: missing colon" + data);
     }
 
+    private (object, int) DecodeStringOrBytes(byte[] data, int offset)
+    {
+        int colonIndex = Array.IndexOf(data, (byte)':', offset);
+        if (colonIndex == -1) throw new FormatException("Invalid string: missing colon");
+
+        int length = int.Parse(Encoding.ASCII.GetString(data, offset, colonIndex - offset));
+        int valueStart = colonIndex + 1;
+
+        if (_decodeStringsAsUtf8)
+        {
+            string value = Encoding.UTF8.GetString(data, valueStart, length);
+            return (value, valueStart + length - offset);
+        }
+        else
+        {
+            byte[] valueBytes = new byte[length];
+            Array.Copy(data, valueStart, valueBytes, 0, length);
+            return (valueBytes, valueStart + length - offset);
+        }
+    }
     private (long, int) DecodeInteger(byte[] data, int offset)
     {
         int end = Array.IndexOf(data, (byte)'e', offset);
@@ -42,21 +65,20 @@ public class BencodeDecoder
         return (long.Parse(numStr), end - offset + 1);
     }
 
-
     private (Dictionary<string, object>, int) DecodeDictionary(byte[] data, int offset)
     {
         var dict = new Dictionary<string, object>();
 
         int start = offset;
-        offset += 1;              
+        offset += 1;
 
         while (offset < data.Length && data[offset] != (byte)'e')
         {
-            var (key, keyUsed) = DecodeString(data, offset);
+            var (key, keyUsed) = DecodeStringOrBytes(data, offset);
             offset += keyUsed;
 
             var (value, valUsed) = DecodeInput(data, offset);
-            dict.Add(key, value);
+            dict.Add((string)key, value);
             offset += valUsed;
         }
 

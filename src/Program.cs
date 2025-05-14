@@ -31,25 +31,28 @@ else if (command == "info")
     var content = File.ReadAllBytes(param);
     (object result, _) = Bencodedecoder.DecodeInput(content, 0);
 
+   
     var meta = (Dictionary<string, object>)result;
-    var infoDict = (Dictionary<string, object>)meta["info"];
 
-    var announceBytes = (byte[])meta["announce"];
-    string tracker = Encoding.UTF8.GetString(announceBytes);
-    var length = (long)infoDict["length"];
+    byte[] infoBytes = (byte[])meta["info"];
 
-    // Encode the info dictionary
-    byte[] infoBytes = BencodeEncoder.Encode(infoDict);
+    (object infoResult, _) = Bencodedecoder.DecodeInput(infoBytes, 0, decodeStringsAsUtf8: false);
+    var infoDict = (Dictionary<string, object>)infoResult;
 
-    // Compute SHA-1 hash
+    string tracker = (string)meta["announce"];
+    long length = (long)infoDict["length"];
+
+    byte[] encodedInfo = BencodeEncoder.Encode(infoDict);
+
     using (SHA1 sha1 = SHA1.Create())
     {
-        byte[] hashBytes = sha1.ComputeHash(infoBytes);
+        byte[] hashBytes = sha1.ComputeHash(encodedInfo);
         string infoHash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
         Console.WriteLine($"Tracker URL: {tracker}");
         Console.WriteLine($"Length: {length}");
         Console.WriteLine($"Info Hash: {infoHash}");
     }
+
 }
 else
 {
