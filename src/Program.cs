@@ -40,10 +40,9 @@ else if (command == "info")
     long length = (long)infoDict["length"];
 
     string infoMarker = "4:infod";
-    int infoStartIndex = BencodeUtils.FindMarkerPosition(content, infoMarker) + 6;
+    int infoStartIndex = BencodeUtils.FindMarkerPosition(content, infoMarker) + infoMarker.Length - 1;;
     int infoEndIndex = BencodeUtils.FindMatchingEnd(content, infoStartIndex);
     byte[] infoBytes = content[(infoStartIndex - 1)..(infoEndIndex + 1)];
-    //byte[] encodedInfo = BencodeEncoder.Encode(infoDict);
 
     using (SHA1 sha1 = SHA1.Create())
     {
