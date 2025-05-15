@@ -39,8 +39,8 @@ else if (command == "info")
     string tracker = (string)meta["announce"];
     long length = (long)infoDict["length"];
 
-    string infoMarker = "d4:info";
-    int infoStartIndex = BencodeUtils.FindMarkerPosition(content, infoMarker) + infoMarker.Length;
+    string infoMarker = "4:infod";
+    int infoStartIndex = BencodeUtils.FindMarkerPosition(content, infoMarker) + 6;
     int infoEndIndex = BencodeUtils.FindMatchingEnd(content, infoStartIndex);
     byte[] infoBytes = content[(infoStartIndex - 1)..(infoEndIndex + 1)];
     //byte[] encodedInfo = BencodeEncoder.Encode(infoDict);
