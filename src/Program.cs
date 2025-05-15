@@ -31,13 +31,9 @@ else if (command == "info")
     var content = File.ReadAllBytes(param);
     (object result, _) = Bencodedecoder.DecodeInput(content, 0);
 
-   
+
     var meta = (Dictionary<string, object>)result;
-
-    byte[] infoBytes = (byte[])meta["info"];
-
-    (object infoResult, _) = Bencodedecoder.DecodeInput(infoBytes, 0, decodeStringsAsUtf8: false);
-    var infoDict = (Dictionary<string, object>)infoResult;
+    var infoDict = (Dictionary<string, object>)meta["info"]; 
 
     string tracker = (string)meta["announce"];
     long length = (long)infoDict["length"];
