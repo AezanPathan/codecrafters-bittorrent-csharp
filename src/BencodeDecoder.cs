@@ -34,7 +34,7 @@ public class BencodeDecoder
             throw new FormatException("Invalid string: missing colon" + data);
     }
 
-    private (object, int) DecodeStringOrBytes(byte[] data, int offset)
+    private (object, int) DecodeStringOrBytes(byte[] data, int offset, bool decodeStringsAsUtf8 = false)
     {
         int colonIndex = Array.IndexOf(data, (byte)':', offset);
         if (colonIndex == -1) throw new FormatException("Invalid string: missing colon");
@@ -42,7 +42,7 @@ public class BencodeDecoder
         int length = int.Parse(Encoding.ASCII.GetString(data, offset, colonIndex - offset));
         int valueStart = colonIndex + 1;
 
-        if (_decodeStringsAsUtf8)
+        if (decodeStringsAsUtf8)
         {
             string value = Encoding.UTF8.GetString(data, valueStart, length);
             return (value, valueStart + length - offset);
@@ -74,11 +74,12 @@ public class BencodeDecoder
 
         while (offset < data.Length && data[offset] != (byte)'e')
         {
-            var (key, keyUsed) = DecodeStringOrBytes(data, offset);
+            var (key, keyUsed) = DecodeStringOrBytes(data, offset, decodeStringsAsUtf8: true);
+            string keyString = (string)key;
             offset += keyUsed;
 
             var (value, valUsed) = DecodeInput(data, offset);
-            dict.Add((string)key, value);
+            dict.Add(keyString, value);
             offset += valUsed;
         }
 
