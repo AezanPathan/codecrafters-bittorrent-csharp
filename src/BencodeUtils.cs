@@ -18,7 +18,7 @@ public class BencodeUtils
     public static int FindMatchingEnd(byte[] data, int start)
     {
         int depth = 1;
-        for (int i = start; i < data.Length; i++)
+        for (int i = start + 1; i < data.Length; i++)
         {
             if (data[i] == (byte)'d') depth++;
             else if (data[i] == (byte)'e')
