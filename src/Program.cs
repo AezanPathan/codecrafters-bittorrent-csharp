@@ -46,7 +46,7 @@ else if (command == "info")
         string infoHash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
         Console.WriteLine($"Tracker URL: {tracker}");
         Console.WriteLine($"Length: {length}");
-        Console.WriteLine($"Info Hash: {infoHash}");
+      //  Console.WriteLine($"Info Hash: {infoHash}");
     }
 
 }
