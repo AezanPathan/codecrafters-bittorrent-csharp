@@ -34,7 +34,7 @@ public class BencodeDecoder
             throw new FormatException("Invalid string: missing colon" + data);
     }
 
-    private (object, int) DecodeStringOrBytes(byte[] data, int offset, bool decodeStringsAsUtf8 = true)
+    public (object, int) DecodeStringOrBytes(byte[] data, int offset, bool decodeStringsAsUtf8 = true)
     {
         int colonIndex = Array.IndexOf(data, (byte)':', offset);
         if (colonIndex == -1) throw new FormatException("Invalid string: missing colon");
