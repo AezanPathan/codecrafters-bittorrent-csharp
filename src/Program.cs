@@ -45,6 +45,9 @@ else if (command == "info")
     int infoStartIndex = markerPosition + infoMarker.Length - 1;
     int infoEndIndex = BencodeUtils.FindMatchingEnd(content, infoStartIndex);
     byte[] infoBytes = content[infoStartIndex..(infoEndIndex + 1)];
+    Console.WriteLine($"Info Bytes: {infoBytes}");
+    Console.WriteLine($"Info StartIndex: {infoStartIndex}");
+    Console.WriteLine($"Info EndIndex: {infoEndIndex}");
 
     using (SHA1 sha1 = SHA1.Create())
     {
