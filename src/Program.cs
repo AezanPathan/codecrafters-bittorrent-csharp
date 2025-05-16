@@ -40,7 +40,10 @@ else if (command == "info")
     string tracker = (string)meta["announce"];
     long length = (long)infoDict["length"];
 
-    byte[] infoBytes = BencodeEncoder.Encode(infoDict);
+    const string marker = "4:infod";
+    int markerPosition = BencodeUtils.FindMarkerPosition(content, marker);
+    int infoStartIndex = markerPosition + marker.Length - 1;
+    byte[] infoBytes = content[infoStartIndex..^1];
     byte[] hashBytes = SHA1.HashData(infoBytes);
     string infoHash = Convert.ToHexString(hashBytes).ToLower();
 
