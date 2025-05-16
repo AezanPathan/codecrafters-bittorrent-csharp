@@ -29,7 +29,6 @@ else if (command == "info")
 {
     var Bencodedecoder = new BencodeDecoder();
     var BencodeUtils = new BencodeUtils();
-    //var BencodeEncoder = new BencodeEncoder();
 
     var content = File.ReadAllBytes(param);
     (object result, _) = Bencodedecoder.DecodeInput(content, 0);
@@ -50,25 +49,6 @@ else if (command == "info")
     Console.WriteLine($"Tracker URL: {tracker}");
     Console.WriteLine($"Length: {length}");
     Console.WriteLine($"Info Hash: {infoHash}");
-
-    // string infoMarker = "4:infod";
-    // int markerPosition = BencodeUtils.FindMarkerPosition(content, infoMarker);
-
-    // int infoStartIndex = markerPosition + infoMarker.Length - 1;
-    // int infoEndIndex = BencodeUtils.FindMatchingEnd(content, infoStartIndex);
-    // byte[] infoBytes = content[infoStartIndex..(infoEndIndex + 1)];
-    // Console.WriteLine($"Info Bytes: {infoBytes}");
-    // Console.WriteLine($"Info StartIndex: {infoStartIndex}");
-    // Console.WriteLine($"Info EndIndex: {infoEndIndex}");
-
-    // using (SHA1 sha1 = SHA1.Create())
-    // {
-    //     byte[] hashBytes = sha1.ComputeHash(infoBytes);
-    //     string infoHash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
-    //     Console.WriteLine($"Tracker URL: {tracker}");
-    //     Console.WriteLine($"Length: {length}");
-    //     Console.WriteLine($"Info Hash: {infoHash}");
-    // }
 
 }
 else
