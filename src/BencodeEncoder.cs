@@ -29,7 +29,7 @@ namespace CodeCrafters.Bittorrent.src
             switch (obj)
             {
                 case string s:
-                    EncodeString(s, stream);
+                EncodeBytes(Encoding.ASCII.GetBytes(s), stream);
                     break;
                 case long l:
                     EncodeInteger(l, stream);
