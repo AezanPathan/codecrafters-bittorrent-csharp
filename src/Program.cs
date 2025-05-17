@@ -28,7 +28,7 @@ if (command == "decode")
 else if (command == "info")
 {
     var Bencodedecoder = new BencodeDecoder();
-    // var bencodeUtils = new BencodeUtils();
+    var trackerClient = new TrackerClient();
 
     var content = File.ReadAllBytes(param);
     (object result, _) = Bencodedecoder.DecodeInput(content, 0);
@@ -60,12 +60,29 @@ else if (command == "info")
 
     List<string> pieceHashes = BencodeUtils.ExtractPieceHashes(piecesBytes);
 
-    Console.WriteLine($"Tracker URL: {tracker}");
-    Console.WriteLine($"Length: {length}");
-    Console.WriteLine($"Info Hash: {infoHash}");
-    Console.WriteLine($"Piece Length: {pieceLength}");
-    Console.WriteLine("Piece Hashes:");
-    foreach (var h in pieceHashes) Console.WriteLine(h);
+    var trackerRequest = new TrackerRequest
+    {
+        TrackerUrl = new Uri(tracker),
+        InfoHash = hashBytes,
+        PeerId = "ABCDEFGHIJKLMNO0000",
+        Port = 6881,
+        Uploaded = 0,
+        Downloaded = 0,
+        Left = length,
+        Compact = true
+    };
+    
+    var client = new TrackerClient();
+    var peers = await client.GetPeersAsync(trackerRequest);
+    foreach (var (ip, port) in peers)
+        Console.WriteLine($"{ip}:{port}");
+
+    // Console.WriteLine($"Tracker URL: {tracker}");
+    // Console.WriteLine($"Length: {length}");
+    // Console.WriteLine($"Info Hash: {infoHash}");
+    // Console.WriteLine($"Piece Length: {pieceLength}");
+    // Console.WriteLine("Piece Hashes:");
+    // foreach (var h in pieceHashes) Console.WriteLine(h);
 
 }
 else
