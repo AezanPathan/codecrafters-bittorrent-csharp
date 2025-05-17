@@ -55,7 +55,7 @@ else if (command == "info")
     // else if (piecesObj is string s) piecesBytes = Encoding.Latin1.GetBytes(s);
     // else throw new InvalidOperationException($"Unexpected type for ‘pieces’: {piecesObj.GetType().Name}");
    
-    const string piecesKey = "7:pieces";
+    const string piecesKey = "6:pieces";
     int piecesKeyPos = BencodeUtils.FindMarkerPosition(infoBytes, piecesKey);
     int lenStart = piecesKeyPos + piecesKey.Length;
     int colonPos = Array.IndexOf(infoBytes, (byte)':', lenStart);
