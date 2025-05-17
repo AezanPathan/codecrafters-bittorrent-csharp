@@ -48,10 +48,14 @@ else if (command == "info")
 
     long pieceLength = (long)infoDict["piece length"];
 
-    byte[] piecesBytes = (byte[])infoDict["pieces"];
+    object piecesObj = infoDict["pieces"];
+    byte[] piecesBytes;
+
+    if (piecesObj is byte[] b) piecesBytes = b;
+    else if (piecesObj is string s) piecesBytes = Encoding.ASCII.GetBytes(s);
+    else throw new InvalidOperationException($"Unexpected type for ‘pieces’: {piecesObj.GetType().Name}");
 
     List<string> pieceHashes = BencodeUtils.ExtractPieceHashes(piecesBytes);
-
 
     Console.WriteLine($"Tracker URL: {tracker}");
     Console.WriteLine($"Length: {length}");
@@ -59,7 +63,7 @@ else if (command == "info")
     Console.WriteLine($"Piece Length: {pieceLength}");
     Console.WriteLine("Piece Hashes:");
     foreach (var h in pieceHashes) Console.WriteLine(h);
-    
+
 }
 else
 {
