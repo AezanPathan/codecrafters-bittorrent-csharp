@@ -48,12 +48,23 @@ else if (command == "info")
 
     long pieceLength = (long)infoDict["piece length"];
 
-    object piecesObj = infoDict["pieces"];
-    byte[] piecesBytes;
+    // object piecesObj = infoDict["pieces"];
+    // byte[] piecesBytes;
 
-    if (piecesObj is byte[] b) piecesBytes = b;
-    else if (piecesObj is string s) piecesBytes = Encoding.Latin1.GetBytes(s);
-    else throw new InvalidOperationException($"Unexpected type for ‘pieces’: {piecesObj.GetType().Name}");
+    // if (piecesObj is byte[] b) piecesBytes = b;
+    // else if (piecesObj is string s) piecesBytes = Encoding.Latin1.GetBytes(s);
+    // else throw new InvalidOperationException($"Unexpected type for ‘pieces’: {piecesObj.GetType().Name}");
+   
+    const string piecesKey = "7:pieces";
+    int piecesKeyPos = BencodeUtils.FindMarkerPosition(infoBytes, piecesKey);
+    int lenStart = piecesKeyPos + piecesKey.Length;
+    int colonPos = Array.IndexOf(infoBytes, (byte)':', lenStart);
+    string lenStr = Encoding.ASCII.GetString(infoBytes[lenStart..colonPos]);
+    if (!int.TryParse(lenStr, out int piecesLen))
+        throw new InvalidOperationException($"Invalid pieces length: {lenStr}");
+    int dataStart = colonPos + 1;
+    byte[] piecesBytes = infoBytes[dataStart..(dataStart + piecesLen)];
+
 
     List<string> pieceHashes = BencodeUtils.ExtractPieceHashes(piecesBytes);
 
