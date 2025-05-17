@@ -15,43 +15,20 @@ public class BencodeUtils
         throw new KeyNotFoundException("Marker not found");
     }
 
-    public static int FindMatchingEnd(byte[] data, int startIndex)
+    public static List<string> ExtractPieceHashes(byte[] piecesBytes)
     {
-        int depth = 1;
-        int i = startIndex + 1; // Start after 'd'
+        const int HASH_SIZE = 20;
+        int count = piecesBytes.Length / HASH_SIZE;
+        var pieceHashes = new List<string>(count);
 
-        while (i < data.Length && depth > 0)
+        for (int i = 0; i < piecesBytes.Length; i += HASH_SIZE)
         {
-            byte current = data[i];
-            if (current == 'd' || current == 'l')
-            {
-                depth++;
-                i++;
-            }
-            else if (current == 'e')
-            {
-                depth--;
-                i++;
-                if (depth == 0)
-                    return i - 1; // Position of closing 'e'
-            }
-            else if (char.IsDigit((char)current))
-            {
-                // Skip over string (e.g., "3:foo")
-                int colon = Array.IndexOf(data, (byte)':', i);
-                if (colon == -1) break;
-                int length = int.Parse(Encoding.ASCII.GetString(data, i, colon - i));
-                i = colon + 1 + length; // Move past the string
-            }
-            else
-            {
-                i++;
-            }
+            byte[] singleHash = new byte[HASH_SIZE];
+            Array.Copy(piecesBytes, i, singleHash, 0, HASH_SIZE);
+            pieceHashes.Add(Convert.ToHexString(singleHash).ToLower());
         }
 
-        if (depth != 0)
-            throw new FormatException("Unclosed structure");
-
-        return i - 1;
+        return pieceHashes;
     }
+
 }

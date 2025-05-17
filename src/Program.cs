@@ -28,7 +28,7 @@ if (command == "decode")
 else if (command == "info")
 {
     var Bencodedecoder = new BencodeDecoder();
-    var BencodeUtils = new BencodeUtils();
+    // var bencodeUtils = new BencodeUtils();
 
     var content = File.ReadAllBytes(param);
     (object result, _) = Bencodedecoder.DecodeInput(content, 0);
@@ -46,10 +46,20 @@ else if (command == "info")
     byte[] hashBytes = SHA1.HashData(infoBytes);
     string infoHash = Convert.ToHexString(hashBytes).ToLower();
 
+    long pieceLength = (long)infoDict["piece length"];
+
+    byte[] piecesBytes = (byte[])infoDict["pieces"];
+
+    List<string> pieceHashes = BencodeUtils.ExtractPieceHashes(piecesBytes);
+
+
     Console.WriteLine($"Tracker URL: {tracker}");
     Console.WriteLine($"Length: {length}");
     Console.WriteLine($"Info Hash: {infoHash}");
-
+    Console.WriteLine($"Piece Length: {pieceLength}");
+    Console.WriteLine("Piece Hashes:");
+    foreach (var h in pieceHashes) Console.WriteLine(h);
+    
 }
 else
 {
