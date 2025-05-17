@@ -48,13 +48,6 @@ else if (command == "info")
 
     long pieceLength = (long)infoDict["piece length"];
 
-    // object piecesObj = infoDict["pieces"];
-    // byte[] piecesBytes;
-
-    // if (piecesObj is byte[] b) piecesBytes = b;
-    // else if (piecesObj is string s) piecesBytes = Encoding.Latin1.GetBytes(s);
-    // else throw new InvalidOperationException($"Unexpected type for ‘pieces’: {piecesObj.GetType().Name}");
-   
     const string piecesKey = "6:pieces";
     int piecesKeyPos = BencodeUtils.FindMarkerPosition(infoBytes, piecesKey);
     int lenStart = piecesKeyPos + piecesKey.Length;
@@ -64,7 +57,6 @@ else if (command == "info")
         throw new InvalidOperationException($"Invalid pieces length: {lenStr}");
     int dataStart = colonPos + 1;
     byte[] piecesBytes = infoBytes[dataStart..(dataStart + piecesLen)];
-
 
     List<string> pieceHashes = BencodeUtils.ExtractPieceHashes(piecesBytes);
 
