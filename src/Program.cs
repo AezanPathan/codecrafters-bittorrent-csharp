@@ -52,7 +52,7 @@ else if (command == "info")
     byte[] piecesBytes;
 
     if (piecesObj is byte[] b) piecesBytes = b;
-    else if (piecesObj is string s) piecesBytes = Encoding.ASCII.GetBytes(s);
+    else if (piecesObj is string s) piecesBytes = Encoding.Latin1.GetBytes(s);
     else throw new InvalidOperationException($"Unexpected type for ‘pieces’: {piecesObj.GetType().Name}");
 
     List<string> pieceHashes = BencodeUtils.ExtractPieceHashes(piecesBytes);

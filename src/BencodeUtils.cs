@@ -21,10 +21,11 @@ public class BencodeUtils
         int count = piecesBytes.Length / HASH_SIZE;
         var pieceHashes = new List<string>(count);
 
-        for (int i = 0; i < piecesBytes.Length; i += HASH_SIZE)
+        for (int i = 0; i < count; i++)
         {
+            int offset = i * HASH_SIZE;
             byte[] singleHash = new byte[HASH_SIZE];
-            Array.Copy(piecesBytes, i, singleHash, 0, HASH_SIZE);
+            Array.Copy(piecesBytes, offset, singleHash, 0, HASH_SIZE);
             pieceHashes.Add(Convert.ToHexString(singleHash).ToLower());
         }
 
