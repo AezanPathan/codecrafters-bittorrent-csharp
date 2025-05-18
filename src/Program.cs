@@ -71,19 +71,80 @@ else if (command == "info")
         Left = length,
         Compact = true
     };
-    
+
     var client = new TrackerClient();
     var peers = await client.GetPeersAsync(trackerRequest);
     foreach (var (ip, port) in peers)
         Console.WriteLine($"{ip}:{port}");
 
-    // Console.WriteLine($"Tracker URL: {tracker}");
-    // Console.WriteLine($"Length: {length}");
-    // Console.WriteLine($"Info Hash: {infoHash}");
-    // Console.WriteLine($"Piece Length: {pieceLength}");
-    // Console.WriteLine("Piece Hashes:");
-    // foreach (var h in pieceHashes) Console.WriteLine(h);
+    Console.WriteLine($"Tracker URL: {tracker}");
+    Console.WriteLine($"Length: {length}");
+    Console.WriteLine($"Info Hash: {infoHash}");
+    Console.WriteLine($"Piece Length: {pieceLength}");
+    Console.WriteLine("Piece Hashes:");
+    foreach (var h in pieceHashes) Console.WriteLine(h);
 
+}
+else if (command == "peers")
+{
+    var Bencodedecoder = new BencodeDecoder();
+    var trackerClient = new TrackerClient();
+
+    var content = File.ReadAllBytes(param);
+    (object result, _) = Bencodedecoder.DecodeInput(content, 0);
+
+    var meta = (Dictionary<string, object>)result;
+    var infoDict = (Dictionary<string, object>)meta["info"];
+
+    string tracker = (string)meta["announce"];
+    long length = (long)infoDict["length"];
+
+    const string marker = "4:infod";
+    int markerPosition = BencodeUtils.FindMarkerPosition(content, marker);
+    int infoStartIndex = markerPosition + marker.Length - 1;
+    byte[] infoBytes = content[infoStartIndex..^1];
+    byte[] hashBytes = SHA1.HashData(infoBytes);
+    string infoHash = Convert.ToHexString(hashBytes).ToLower();
+
+    long pieceLength = (long)infoDict["piece length"];
+
+    const string piecesKey = "6:pieces";
+    int piecesKeyPos = BencodeUtils.FindMarkerPosition(infoBytes, piecesKey);
+    int lenStart = piecesKeyPos + piecesKey.Length;
+    int colonPos = Array.IndexOf(infoBytes, (byte)':', lenStart);
+    string lenStr = Encoding.ASCII.GetString(infoBytes[lenStart..colonPos]);
+    if (!int.TryParse(lenStr, out int piecesLen))
+        throw new InvalidOperationException($"Invalid pieces length: {lenStr}");
+    int dataStart = colonPos + 1;
+    byte[] piecesBytes = infoBytes[dataStart..(dataStart + piecesLen)];
+
+    List<string> pieceHashes = BencodeUtils.ExtractPieceHashes(piecesBytes);
+
+    var trackerRequest = new TrackerRequest
+    {
+        TrackerUrl = new Uri(tracker),
+        InfoHash = hashBytes,
+        PeerId = "ABCDEFGHIJKLMNO0000",
+        Port = 6881,
+        Uploaded = 0,
+        Downloaded = 0,
+        Left = length,
+        Compact = true
+    };
+
+    var client = new TrackerClient();
+    var peers = await client.GetPeersAsync(trackerRequest);
+    foreach (var (ip, port) in peers)
+        Console.WriteLine($"{ip}:{port}");
+        
+        /*
+          Console.WriteLine($"Tracker URL: {tracker}");
+    Console.WriteLine($"Length: {length}");
+    Console.WriteLine($"Info Hash: {infoHash}");
+    Console.WriteLine($"Piece Length: {pieceLength}");
+    Console.WriteLine("Piece Hashes:");
+    foreach (var h in pieceHashes) Console.WriteLine(h);
+    */
 }
 else
 {
