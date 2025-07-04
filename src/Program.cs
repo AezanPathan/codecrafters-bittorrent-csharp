@@ -60,11 +60,20 @@ else if (command == "info")
 
     List<string> pieceHashes = BencodeUtils.ExtractPieceHashes(piecesBytes);
 
+    Console.WriteLine($"Tracker URL: {tracker}");
+    Console.WriteLine($"Length: {length}");
+    Console.WriteLine($"Info Hash: {infoHash}");
+    Console.WriteLine($"Piece Length: {pieceLength}");
+    Console.WriteLine("Piece Hashes:");
+    foreach (var h in pieceHashes) Console.WriteLine(h);
+
+    // Temporarily comment out tracker call to debug info hash
+    /*
     var trackerRequest = new TrackerRequest
     {
         TrackerUrl = new Uri(tracker),
         InfoHash = hashBytes,
-        PeerId = "ABCDEFGHIJKLMNO0000",
+        PeerId = "ABCDEFGHIJKLMNO00000",
         Port = 6881,
         Uploaded = 0,
         Downloaded = 0,
@@ -83,6 +92,7 @@ else if (command == "info")
     Console.WriteLine($"Piece Length: {pieceLength}");
     Console.WriteLine("Piece Hashes:");
     foreach (var h in pieceHashes) Console.WriteLine(h);
+    */
 
 }
 else if (command == "peers")
