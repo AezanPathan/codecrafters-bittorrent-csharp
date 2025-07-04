@@ -124,7 +124,7 @@ else if (command == "peers")
     {
         TrackerUrl = new Uri(tracker),
         InfoHash = hashBytes,
-        PeerId = "ABCDEFGHIJKLMNO0000",
+        PeerId = "ABCDEFGHIJKLMNO00000",
         Port = 6881,
         Uploaded = 0,
         Downloaded = 0,
