@@ -154,7 +154,6 @@ else if (command == "peers")
 
 else if (command == "handshake")
 {
-    // args[3] should be in the format <ip>:<port>
     string[] addressParts = args[3].Split(':');
     if (addressParts.Length != 2)
     {
