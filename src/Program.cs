@@ -154,7 +154,7 @@ else if (command == "peers")
 
 else if (command == "handshake")
 {
-    string[] addressParts = args[3].Split(':');
+    string[] addressParts = args[2].Split(':');
     if (addressParts.Length != 2)
     {
         Console.WriteLine("Invalid peer address. Use format <ip>:<port>");
@@ -165,7 +165,7 @@ else if (command == "handshake")
     var peerPort = int.Parse(addressParts[1]);
 
     // Parse the .torrent file
-    var content = File.ReadAllBytes(param);
+    var content = File.ReadAllBytes(args[1]);
     var bdecode = new BencodeDecoder();
     (object result, _) = bdecode.DecodeInput(content, 0);
     var meta = (Dictionary<string, object>)result;
