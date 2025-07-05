@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using CodeCrafters.Bittorrent.src;
+using System.Net;
 
 // Parse arguments
 var (command, param) = args.Length switch
@@ -28,7 +29,7 @@ if (command == "decode")
 else if (command == "info")
 {
     var Bencodedecoder = new BencodeDecoder();
-    var trackerClient = new TrackerClient();
+    // var trackerClient = new TrackerClient();
 
     var content = File.ReadAllBytes(param);
     (object result, _) = Bencodedecoder.DecodeInput(content, 0);
@@ -98,7 +99,7 @@ else if (command == "info")
 else if (command == "peers")
 {
     var Bencodedecoder = new BencodeDecoder();
-    var trackerClient = new TrackerClient();
+    // var trackerClient = new TrackerClient();
 
     var content = File.ReadAllBytes(param);
     (object result, _) = Bencodedecoder.DecodeInput(content, 0);
@@ -130,11 +131,14 @@ else if (command == "peers")
 
     List<string> pieceHashes = BencodeUtils.ExtractPieceHashes(piecesBytes);
 
+    var peerIdBytes = new byte[20];
+    RandomNumberGenerator.Fill(peerIdBytes);
+
     var trackerRequest = new TrackerRequest
     {
         TrackerUrl = new Uri(tracker),
         InfoHash = hashBytes,
-        PeerId = "ABCDEFGHIJKLMNO00000",
+        PeerId = Encoding.ASCII.GetString(peerIdBytes),
         Port = 6881,
         Uploaded = 0,
         Downloaded = 0,
@@ -146,15 +150,44 @@ else if (command == "peers")
     var peers = await client.GetPeersAsync(trackerRequest);
     foreach (var (ip, port) in peers)
         Console.WriteLine($"{ip}:{port}");
-        
-        /*
-          Console.WriteLine($"Tracker URL: {tracker}");
-    Console.WriteLine($"Length: {length}");
-    Console.WriteLine($"Info Hash: {infoHash}");
-    Console.WriteLine($"Piece Length: {pieceLength}");
-    Console.WriteLine("Piece Hashes:");
-    foreach (var h in pieceHashes) Console.WriteLine(h);
-    */
+}
+
+else if (command == "handshake")
+{
+    // args[3] should be in the format <ip>:<port>
+    string[] addressParts = args[3].Split(':');
+    if (addressParts.Length != 2)
+    {
+        Console.WriteLine("Invalid peer address. Use format <ip>:<port>");
+        return;
+    }
+    var client = new TrackerClient();
+    var peerIp = IPAddress.Parse(addressParts[0]);
+    var peerPort = int.Parse(addressParts[1]);
+
+    // Parse the .torrent file
+    var content = File.ReadAllBytes(param);
+    var bdecode = new BencodeDecoder();
+    (object result, _) = bdecode.DecodeInput(content, 0);
+    var meta = (Dictionary<string, object>)result;
+    var infoDict = (Dictionary<string, object>)meta["info"];
+
+    const string marker = "4:infod";
+    int markerPosition = BencodeUtils.FindMarkerPosition(content, marker);
+    int infoStartIndex = markerPosition + marker.Length - 1;
+    byte[] infoBytes = content[infoStartIndex..^1];
+
+    byte[] infoHash = SHA1.HashData(infoBytes);
+
+    // Generate random peer ID (20 bytes)
+    var peerIdBytes = new byte[20];
+    RandomNumberGenerator.Fill(peerIdBytes);
+
+    // Perform handshake
+    var receivedPeerId = await client.PerformHandshake(peerIp, peerPort, infoHash, peerIdBytes);
+
+    // Output received peer ID
+    Console.WriteLine($"Peer ID: {receivedPeerId}");
 }
 else
 {
