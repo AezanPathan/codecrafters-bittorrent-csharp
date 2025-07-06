@@ -82,7 +82,7 @@ public class TrackerClient
         using var stream = new MemoryStream();
         stream.WriteByte(19); // length of protocol string
         stream.Write(Encoding.ASCII.GetBytes("BitTorrent protocol"));
-        stream.Write(new byte[8]); // reserved
+        stream.Write(new byte[8]); 
         stream.Write(infoHash);    // 20 bytes
         stream.Write(peerId);      // 20 bytes
         return stream.ToArray();
@@ -101,9 +101,86 @@ public class TrackerClient
         var response = new byte[68];
         await stream.ReadAsync(response);
 
-        // Extract peer_id from last 20 bytes
         byte[] receivedPeerId = response[48..68];
         return BitConverter.ToString(receivedPeerId).Replace("-", "").ToLower();
+    }
+
+    #region peer messages
+
+    public static byte[] BuildMessage(byte messageId, byte[] payload = null)
+    {
+        payload ??= Array.Empty<byte>();
+        int messageLength = 1 + payload.Length;
+
+        using var ms = new MemoryStream();
+        ms.Write(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(messageLength)));
+        ms.WriteByte(messageId);
+        ms.Write(payload);
+        return ms.ToArray();
+    }
+
+    public static async Task<(byte messageId, byte[] payload)> ReadMessage(NetworkStream stream)
+    {
+        byte[] lengthBuffer = new byte[4];
+        await stream.ReadExactlyAsync(lengthBuffer);
+        int messageLength = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(lengthBuffer));
+
+        if (messageLength == 0)
+            return (255, Array.Empty<byte>()); // Keep-alive
+
+        byte[] messageBuffer = new byte[messageLength];
+        await stream.ReadExactlyAsync(messageBuffer);
+
+        byte messageId = messageBuffer[0];
+        byte[] payload = messageBuffer[1..];
+        return (messageId, payload);
+    }
+
+
+    #endregion
+
+    public async Task<byte[]> DownloadPiece(NetworkStream stream, int pieceIndex, int pieceLength)
+    {
+        const int blockSize = 16384;
+        int totalBlocks = (int)Math.Ceiling(pieceLength / (double)blockSize);
+
+        byte[] pieceBuffer = new byte[pieceLength];
+
+        for (int i = 0; i < totalBlocks; i++)
+        {
+            int begin = i * blockSize;
+            int blockLength = Math.Min(blockSize, pieceLength - begin);
+
+            using var ms = new MemoryStream();
+            ms.Write(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(pieceIndex)));
+            ms.Write(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(begin)));
+            ms.Write(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(blockLength)));
+
+            var payload = ms.ToArray();
+
+            await stream.WriteAsync(BuildMessage(6, payload));
+
+            while (true)
+            {
+                var (messageId, payloadReceived) = await ReadMessage(stream);
+
+                if (messageId != 7)
+                    continue;
+
+                // Parse payload
+                int receivedIndex = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(payloadReceived, 0));
+                int receivedBegin = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(payloadReceived, 4));
+
+                if (receivedIndex != pieceIndex || receivedBegin != begin)
+                    continue;
+
+                // Copy block data
+                Array.Copy(payloadReceived, 8, pieceBuffer, begin, blockLength);
+                break;
+            }
+        }
+
+        return pieceBuffer;
     }
 
 
