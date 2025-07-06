@@ -214,7 +214,7 @@ else if (command == "download_piece")
     //int pieceLength = (int)(long)infoDict["piece length"];
     var pieceLength = Convert.ToInt32((long)infoDict["piece length"]);
 
-    byte[] piecesRaw = (byte[])infoDict["pieces"];
+    byte[] piecesRaw = Encoding.ASCII.GetBytes((string)infoDict["pieces"]);
 
     // Get expected piece hash
     byte[] expectedHash = piecesRaw[(pieceIndex * 20)..((pieceIndex + 1) * 20)];
