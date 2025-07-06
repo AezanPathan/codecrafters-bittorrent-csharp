@@ -211,7 +211,9 @@ else if (command == "download_piece")
 
     string tracker = (string)meta["announce"];
     long totalLength = (long)infoDict["length"];
-    int pieceLength = (int)(long)infoDict["piece length"];
+    //int pieceLength = (int)(long)infoDict["piece length"];
+    var pieceLength = Convert.ToInt32((long)infoDict["piece length"]);
+
     byte[] piecesRaw = (byte[])infoDict["pieces"];
 
     // Get expected piece hash
