@@ -215,7 +215,14 @@ else if (command == "download_piece")
     var pieceLength = Convert.ToInt32((long)infoDict["piece length"]);
 
     //byte[] piecesRaw = Encoding.ASCII.GetBytes((string)infoDict["pieces"]);
-    byte[] piecesRaw = (byte[])infoDict["pieces"];
+    const string piecesKey = "6:pieces";
+    int piecesKeyPos = BencodeUtils.FindMarkerPosition(infoBytes, piecesKey);
+    int lenStart = piecesKeyPos + piecesKey.Length;
+    int colonPos = Array.IndexOf(infoBytes, (byte)':', lenStart);
+    string lenStr = Encoding.ASCII.GetString(infoBytes[lenStart..colonPos]);
+    int piecesLen = int.Parse(lenStr);
+    int dataStart = colonPos + 1;
+    byte[] piecesRaw = infoBytes[dataStart..(dataStart + piecesLen)];
 
     int numberOfPieces = piecesRaw.Length / 20;
     if (pieceIndex < 0 || pieceIndex >= numberOfPieces)
