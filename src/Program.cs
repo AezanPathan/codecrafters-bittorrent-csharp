@@ -216,6 +216,10 @@ else if (command == "download_piece")
 
     byte[] piecesRaw = Encoding.ASCII.GetBytes((string)infoDict["pieces"]);
 
+    int numberOfPieces = piecesRaw.Length / 20;
+    if (pieceIndex < 0 || pieceIndex >= numberOfPieces)
+        throw new ArgumentOutOfRangeException(nameof(pieceIndex), $"Invalid piece index {pieceIndex}. Only {numberOfPieces} pieces available.");
+
     // Get expected piece hash
     byte[] expectedHash = piecesRaw[(pieceIndex * 20)..((pieceIndex + 1) * 20)];
 
