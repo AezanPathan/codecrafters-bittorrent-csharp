@@ -287,6 +287,87 @@ else if (command == "download_piece")
     await File.WriteAllBytesAsync(outputPath, pieceData);
 }
 
+else if (command == "download")
+{
+    string outputPath = args[2];
+    string torrentFile = args[3];
+
+    var content = File.ReadAllBytes(torrentFile);
+    var bdecode = new BencodeDecoder();
+    (object result, _) = bdecode.DecodeInput(content, 0);
+    var meta = (Dictionary<string, object>)result;
+    var infoDict = (Dictionary<string, object>)meta["info"];
+
+    const string marker = "4:infod";
+    int markerPosition = BencodeUtils.FindMarkerPosition(content, marker);
+    int infoStartIndex = markerPosition + marker.Length - 1;
+    byte[] infoBytes = content[infoStartIndex..^1];
+    byte[] infoHash = SHA1.HashData(infoBytes);
+
+    string tracker = (string)meta["announce"];
+    long totalLength = (long)infoDict["length"];
+    int pieceLength = Convert.ToInt32((long)infoDict["piece length"]);
+
+    // Extract raw piece hashes
+    const string piecesKey = "6:pieces";
+    int piecesKeyPos = BencodeUtils.FindMarkerPosition(infoBytes, piecesKey);
+    int lenStart = piecesKeyPos + piecesKey.Length;
+    int colonPos = Array.IndexOf(infoBytes, (byte)':', lenStart);
+    string lenStr = Encoding.ASCII.GetString(infoBytes[lenStart..colonPos]);
+    int piecesLen = int.Parse(lenStr);
+    int dataStart = colonPos + 1;
+    byte[] piecesRaw = infoBytes[dataStart..(dataStart + piecesLen)];
+
+    int numberOfPieces = piecesRaw.Length / 20;
+
+    var peerIdBytes = new byte[20];
+    RandomNumberGenerator.Fill(peerIdBytes);
+
+    var trackerRequest = new TrackerRequest
+    {
+        TrackerUrl = new Uri(tracker),
+        InfoHash = infoHash,
+        PeerId = Encoding.ASCII.GetString(peerIdBytes),
+        Port = 6881,
+        Uploaded = 0,
+        Downloaded = 0,
+        Left = totalLength,
+        Compact = true
+    };
+
+    var client = new TrackerClient();
+    var peers = await client.GetPeersAsync(trackerRequest);
+    var (ip, port) = peers.First();
+
+    using var tcpClient = new TcpClient();
+    await tcpClient.ConnectAsync(ip, port);
+    using var stream = tcpClient.GetStream();
+
+    await stream.WriteAsync(TrackerClient.BuildHandshake(infoHash, peerIdBytes));
+    await stream.ReadExactlyAsync(new byte[68]); // handshake response
+
+    await stream.WriteAsync(TrackerClient.BuildMessage(2)); // Interested
+    var (msg, _) = await TrackerClient.ReadMessage(stream);
+    if (msg != 1) throw new Exception("Expected unchoke");
+
+    byte[] fullFile = new byte[totalLength];
+    for (int i = 0; i < numberOfPieces; i++)
+    {
+        byte[] expectedHash = piecesRaw[(i * 20)..((i + 1) * 20)];
+
+        int actualPieceLength = Math.Min(pieceLength, (int)(totalLength - (long)i * pieceLength));
+        byte[] pieceData = await client.DownloadPiece(stream, i, actualPieceLength);
+
+        byte[] actualHash = SHA1.HashData(pieceData);
+        if (!expectedHash.SequenceEqual(actualHash))
+            throw new Exception($"Piece {i} hash mismatch");
+
+        Buffer.BlockCopy(pieceData, 0, fullFile, i * pieceLength, pieceData.Length);
+    }
+
+    await File.WriteAllBytesAsync(outputPath, fullFile);
+}
+
 
 else
 {
