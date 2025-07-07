@@ -347,8 +347,16 @@ else if (command == "download")
     await stream.ReadExactlyAsync(new byte[68]); // handshake response
 
     await stream.WriteAsync(TrackerClient.BuildMessage(2)); // Interested
-    var (msg, _) = await TrackerClient.ReadMessage(stream);
-    if (msg != 1) throw new Exception("Expected unchoke");
+    bool unchoked = false;
+    
+    while (!unchoked)
+    {
+        var (msg, _) = await TrackerClient.ReadMessage(stream);
+        if (msg == 1) unchoked = true;
+        else if (msg == 0) throw new Exception("choked"); // choke
+    }
+
+   // if (msg != 1) throw new Exception("Expected unchoke");
 
     byte[] fullFile = new byte[totalLength];
     for (int i = 0; i < numberOfPieces; i++)
